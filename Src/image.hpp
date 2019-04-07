@@ -64,14 +64,21 @@ apImage::apImage(const apImage &src) : width_(0), height_(0), pixels_(0) {
     }
 }
 
+template<class Type> void swap(Type &a, Type &b) {
+    Type copy(a);
+    a = b;
+    b = copy;
+}
+
+void apImage::swap(apImage &src) {
+    ::swap(width_, src.width_);
+    ::swap(height_, src.height_);
+    ::swap(pixels_, src.pixels_);
+}
+
 apImage &apImage::operator=(const apImage &src) {
-    if (&src != this) {
-        cleanup();
-        width_ = src.width();
-        height_ = src.height();
-        init();
-        memcpy(pixels_, src.pixels_, width_*height_);
-    }
+    apImage temp(src);
+    swap(temp);
     return *this;
 }
 
