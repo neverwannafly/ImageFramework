@@ -22,7 +22,7 @@ public:
     inline int width() const {return width_;}
     inline int height() const {return height_;}
 
-    class rangeError {};
+    class RangeError {};
 
 private:
     void init();
@@ -84,7 +84,7 @@ apImage &apImage::operator=(const apImage &src) {
 
 void apImage::setPixel(int x, int y, unsigned char pixel) {
     if (x<0 || y<0 || x>=width_ || y>=height_ || !isValid()) {
-        throw rangeError();
+        throw RangeError();
     }
     unsigned char *p = pixels_ + y*width_ + x;
     *p = pixel;
@@ -92,7 +92,7 @@ void apImage::setPixel(int x, int y, unsigned char pixel) {
 
 unsigned char apImage::getPixel(int x, int y) const {
     if (x<0 || y<0 || x>=width_ || y>=height_ || !isValid()) {
-        throw rangeError();
+        throw RangeError();
     }
     unsigned char *p = pixels_ + y*width_ + x;
     return *p;
