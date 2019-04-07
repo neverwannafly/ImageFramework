@@ -2,7 +2,6 @@
 #define thumbnail_hpp
 
 #include "image.hpp"
-
 #include <iostream>
 
 class apThumbnail {
