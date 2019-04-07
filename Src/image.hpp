@@ -82,4 +82,20 @@ apImage &apImage::operator=(const apImage &src) {
     return *this;
 }
 
+void apImage::setPixel(int x, int y, unsigned char pixel) {
+    if (x<0 || y<0 || x>=width_ || y>=height_ || !isValid()) {
+        throw rangeError();
+    }
+    unsigned char *p = pixels_ + y*width_ + x;
+    *p = pixel;
+}
+
+unsigned char apImage::getPixel(int x, int y) const {
+    if (x<0 || y<0 || x>=width_ || y>=height_ || !isValid()) {
+        throw rangeError();
+    }
+    unsigned char *p = pixels_ + y*width_ + x;
+    return *p;
+}
+
 #endif
