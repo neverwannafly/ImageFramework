@@ -19,7 +19,7 @@ private:
     unsigned char averagePixels(int x0, int y0, int factor);
 
     apImage image_;
-    apImage thumbail_;
+    apImage thumbnail_;
 };
 
 apThumbnail::apThumbnail(){}
@@ -43,15 +43,41 @@ void apThumbnail::writeImage(const char* outputFile) const {
     std::ios_base::fmtflags flags = std::cout.flags(std::cout.hex);
     int width = std::cout.width(2);
 
-    for (int y=0; y<thumbail_.height(); y++) {
-        for (int x=0; x<thumbail_.width(); x++) {
-            std::cout << (int) thumbail_.getPixel(x, y) << " ";
+    for (int y=0; y<thumbnail_.height(); y++) {
+        for (int x=0; x<thumbnail_.width(); x++) {
+            std::cout << (int) thumbnail_.getPixel(x, y) << " ";
         }
         std::cout << "\n";
     }
 
     std::cout.flags(flags);
     std::cout.width(width);
+}
+
+void apThumbnail::createThumbnail(const char *inputFile, const char *outputFile, int factor) {
+    if (inputFile==0 || outputFile==0 || factor<=1) {
+        throw Invalid();
+    }
+
+    readImage(inputFile);
+
+    if (!image_.isValid()) {
+        throw Invalid();
+    }
+
+    thumbnail_ = apImage(image_.width()/factor, image_.height()/factor);
+    try {
+        for (int y=0; y<thumbnail_.height(); y++) {
+            for (int x=0; x<thumbnail_.width(); x++) {
+                unsigned char pixel = averagePixels(x*factor, y*factor, factor);
+                thumbnail_.setPixel(x, y, pixel);
+            }
+        }
+    } catch(apImage::RangeError) {
+        throw Invalid();
+    }
+
+    writeImage(outputFile);
 }
 
 #endif
