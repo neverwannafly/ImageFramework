@@ -15,10 +15,10 @@ public:
     void setPixel(int x, int y, unsigned char pixel);
     unsigned char getPixel(int x, int y) const;
 
-    bool isValid () const { return pixels_ != 0;}
+    inline bool isValid () const { return pixels_ != 0;}
 
-    int width() const {return width_;}
-    int height() const {return height_;}
+    inline int width() const {return width_;}
+    inline int height() const {return height_;}
 
     class rangeError {};
 
