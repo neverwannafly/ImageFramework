@@ -80,4 +80,20 @@ void apThumbnail::createThumbnail(const char *inputFile, const char *outputFile,
     writeImage(outputFile);
 }
 
+unsigned char apThumbnail::averagePixels(int x0, int y0, int factor) {
+    int sum = 0;
+    try {
+        for (int y=0; y<factor; y++) {
+            for (int x=0; x<factor; x++) {
+                sum += image_.getPixel(x+x0, y+y0);
+            }
+        }
+    } catch(apImage::RangeError) {
+        throw Invalid();
+    }
+
+    return static_cast<unsigned char>(sum/(factor*factor));
+
+}
+
 #endif
