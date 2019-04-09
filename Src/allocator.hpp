@@ -139,4 +139,10 @@ apAlloc<T, A> &apAlloc<T, A>::gNull() { // just like int &apAlloc::gNull()
     return sNull_;
 }
 
+template<typename T, typename A>
+apAlloc<T, A>::apAlloc() : pMem_(0) {
+    pMem_ = gNull().pMem_;
+    pMem_->addRef();
+}
+
 #endif
