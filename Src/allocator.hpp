@@ -125,7 +125,18 @@ public:
 
 protected:  
     A *pMem_; // Pointer to our allocated memory
-    static apAlloc *sNull; // Our Null object
+    static apAlloc *sNull_; // Our Null object
 };
+
+template<typename T, typename A>
+apAlloc<T, A> *apAlloc<T, A>::sNull_ = 0; // just like int *apAlloc::sNull_ = 0
+
+template<typename T, typename A>
+apAlloc<T, A> &apAlloc<T, A>::gNull() { // just like int &apAlloc::gNull()
+    if (!sNull_) {
+        sNull_ = new apAlloc(0);
+    }
+    return sNull_;
+}
 
 #endif
