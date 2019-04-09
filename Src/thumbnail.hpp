@@ -54,7 +54,7 @@ void apThumbnail::writeImage(const char* outputFile) const {
 }
 
 void apThumbnail::createThumbnail(const char *inputFile, const char *outputFile, int factor) {
-    if (inputFile==0 || outputFile==0 || factor<=1) {
+    if (inputFile==0 || outputFile==0 || factor<1) {
         throw Invalid();
     }
 
