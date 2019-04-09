@@ -87,4 +87,45 @@ private:
     // No copy or assignment is allowed
 };
 
+template<typename T, typename A = apAllocator_<T> >
+class apAlloc {
+public:
+    static apAlloc &gNull();
+    // We return this object for any null allocations
+    // It actually allocates 1 byte to make all the member
+    // functions valid
+
+    apAlloc();
+    // Null allocation Returns pointer to gNull() memory
+
+    explicit apAlloc(unsigned int size, unsigned int align=0);
+    ~apAlloc();
+
+    apAlloc(const apAlloc &src);
+    apAlloc &operator=(const apAlloc &src);
+    // Need own copy constructor and assignment operator
+
+    unsigned int size() const { return pMem_->size(); }
+    unsigned int ref() const { return pMem_->ref(); }
+    bool isNull() const { return pMem_ == gNull().pMem_; }
+
+    const T* data() const { return *pMem_; }
+    T* data() { return *pMem_; }
+    // Access to the beginning of our memory location
+
+    const T &operator[] (unsigned int index) const;
+    T & operator[](unsigned int index);
+    // Access a specific element. Throws the STL range_error if index is invalid
+
+    virtual A* clone();
+    // Duplicate the memory in the underlying allocator.
+
+    void duplicate();
+    // Breaks any reference counting and forces this object to have it's own copy.
+
+protected:  
+    A *pMem_; // Pointer to our allocated memory
+    static apAlloc *sNull; // Our Null object
+};
+
 #endif
