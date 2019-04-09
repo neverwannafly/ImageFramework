@@ -42,7 +42,7 @@ protected:
 
 };
 
-template<class T>
+template<typename T>
 class apAllocator_ : public apAllocatorBase_<T> {
 public:
     explicit apAllocator_ (unsigned int n, unsigned int align = 0): apAllocatorBase_<T> (n, align) {
