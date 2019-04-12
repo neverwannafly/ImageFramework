@@ -182,4 +182,26 @@ const T &apAlloc<T,A>::operator[] (unsigned int index) const {
     return *(data() + index);
 }
 
+template<typename T, typename A>
+void apAlloc<T, A>::duplicate() {
+    if (ref()==1) return;
+
+    A* copy = clone();
+    pMem_->subRef();
+    pMem_ = copy();
+
+}
+
+// Does a shallow copy
+template<typename T, typename A>
+A *apAlloc<T, A>::clone() {
+    A *copy = new A(pMem_->size(), pMem_->align());
+
+    T *src = *pMem;
+    T *dst = *copy;
+    std::copy(src, &(src[pMem_->size()]), dst);
+
+    return copy;
+}
+
 #endif
