@@ -145,4 +145,25 @@ apAlloc<T, A>::apAlloc() : pMem_(0) {
     pMem_->addRef();
 }
 
+template<typename T, typename A>
+apAlloc<T, A> &apAlloc<T, A>::operator=(const apAlloc &src) {
+    if (pMem_ == src.pMem_) return *this;
+
+    // Remove reference from existing object. addRef() and subRef()
+    // donot throw so we dont have to worry about catching an error
+
+    pMem_->subRef();
+    pMem_ = src.pMem_;
+    pMem_->addRef();
+
+    return *this;
+}
+
+template<typename T, typename A>
+apAlloc<T, A>::apAlloc(const apAlloc &src) {
+    pMem_->subRef();
+    pMem_ = src.pMem_;
+    pMem_->addRef();
+}
+
 #endif
