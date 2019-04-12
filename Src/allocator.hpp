@@ -166,4 +166,20 @@ apAlloc<T, A>::apAlloc(const apAlloc &src) {
     pMem_->addRef();
 }
 
+template<typename T, typename A>
+T &apAlloc<T,A>::operator[] (unsigned int index) {
+    if (index >= size()) {
+        throw std::range_error("Index out of range");
+    }
+    return *(data() + index);
+}
+
+template<typename T, typename A>
+const T &apAlloc<T,A>::operator[] (unsigned int index) const {
+    if (index >= size()) {
+        throw std::range_error("Index out of range");
+    }
+    return *(data() + index);
+}
+
 #endif
