@@ -1,101 +1,138 @@
 #ifndef image_hpp
 #define image_hpp
 
-#include <cstring>
+template<typename T, typename E> class apImageRep;
 
+template <typename T, typename E>
 class apImage {
 public:
+    friend class apImageRep<T,E>;
+
     apImage();
-    apImage(int width, int height);
-    ~apImage();
+    apImage(unsigned int width, unsigned int height);
+    ~apImage() { image_->subRef(); };
 
     apImage(const apImage &src);
     apImage &operator=(const apImage &src);
 
-    void swap(apImage &src);
-
-    void setPixel(int x, int y, unsigned char pixel);
-    unsigned char getPixel(int x, int y) const;
-
-    bool isValid () const { return pixels_ != 0;}
-
-    int width() const {return width_;}
-    int height() const {return height_;}
-
-    class RangeError {};
-
-private:
-    void init();
-    void cleanup();
-
-    int width_;
-    int height_;
-    unsigned char *pixels_;
-
+    const apImageRep<T,E> *operator->() const { return image_; }
+    apImageRep<T,E> *operator->() { return image_; }
+protected:
+    apImage(apImageRep<T,E> *rep);
+    // construct an image from a rep instance
+    apImageRep<T,E> *image_;
+    // Actual image data
 };
 
-void apImage::cleanup() {
-    delete [] pixels_;
-    width_ = 0;
-    height_ = 0;
-    pixels_ = 0;
+template<typename T, typename E>
+apImage<T,E>::apImage(): image_(0) {
+    image_ = new apImageRep();
+    image_->addRef();
 }
 
-void apImage::init() {
-    if (width_ > 0 && height_ > 0) {
-        pixels_ = new unsigned char[width_ * height_];
+template<typename T, typename E>
+apImage<T,E>::apImage(unsigned int width, unsigned int height): image_(0) {
+    image_ = new apImageRep<T,E>(width, height);
+    image_->addRef();
+}
+
+template<typename T, typename E>
+apImage<T,E>::apImage(apImageRep<T,E> *rep): image_(0) {
+    image_ = rep;
+}
+
+template<typename T, typename E>
+apImage<T,E>::apImage(const apImage &src) {
+    image_->subRef();
+    image_ = src.image_;
+    image_->addRef();
+}
+
+template<typename T, typename E>
+apImage<T,E> &apImage<T,E>::operator=(const apImage &src) {
+    if (&src!=*this) {
+        image_->subRef();
+        image_ = src.image_;
+        image_->addRef();
     }
-}
-
-apImage::apImage(): width_(0), height_(0), pixels_(0) {};
-apImage::apImage(int width, int height): width_(width), height_(height), pixels_(0) {
-    init();
-}
-apImage::~apImage() {
-    cleanup();
-}
-
-apImage::apImage(const apImage &src) : width_(0), height_(0), pixels_(0) {
-    if (src.isValid()) {
-        width_ = src.width();
-        height_ = src.height();
-        init();
-        memcpy(pixels_, src.pixels_, width_*height_);
-    }
-}
-
-template<class Type> void swap(Type &a, Type &b) {
-    Type copy(a);
-    a = b;
-    b = copy;
-}
-
-void apImage::swap(apImage &src) {
-    ::swap(width_, src.width_);
-    ::swap(height_, src.height_);
-    ::swap(pixels_, src.pixels_);
-}
-
-apImage &apImage::operator=(const apImage &src) {
-    apImage temp(src);
-    swap(temp);
     return *this;
 }
 
-void apImage::setPixel(int x, int y, unsigned char pixel) {
-    if (x<0 || y<0 || x>=width_ || y>=height_ || !isValid()) {
-        throw RangeError();
+template<typename T, typename E>
+class apImageRep {
+    static apImageRep *gNull(); // A null image
+
+    apImageRep(): width_(0), height_(0), ref_(0) {};
+    apImageRep(unsigned int width, unsigned int height): width_(width), height_(height), ref_(0) {
+        pixels_ = apAlloc<T> (width*height);
+    };
+
+    ~apImageRep() {};
+
+    unsigned int width() const { return width_; }
+    unsigned int height() const { return height_; }
+
+    const T *pixles() const { return pixels_.data(); }
+    T *pixels() { return pixels_.data(); }
+
+    const T &getPixel(unsigned int x, unsigned int y) const;
+    void setPixel(unsigned int x, unsigned int y, const T &pixel);
+
+    // Reference counting
+    unsigned int ref() const { return ref_; }
+
+    void addRef() { ref_++; }
+    void subRef() { if (--red_ == 0) delete this; }
+
+    apImage<T, E> thumbnail(unsigned int reduction) const;
+protected:
+    apAlloc<T> pixels_;
+    unsigned int height_;
+    unsigned int width_;
+    unsigned int ref_;
+
+    static apImageRep *sNull_;
+};
+
+template<typename T, typename E>
+apImageRep<T,E> *apImageRep<T,E>::sNull_ = 0;
+
+template<typename T, typename E>
+apImageRep<T,E> *apImageRep<T,E>::gNull() {
+    if (!sNull_) {
+        sNull_ = new apImageRep(0, 0);
+        sNull_ = addRef();
     }
-    unsigned char *p = pixels_ + y*width_ + x;
-    *p = pixel;
+    return sNull_;
 }
 
-unsigned char apImage::getPixel(int x, int y) const {
-    if (x<0 || y<0 || x>=width_ || y>=height_ || !isValid()) {
-        throw RangeError();
-    }
-    unsigned char *p = pixels_ + y*width_ + x;
-    return *p;
+template<typename T, typename E>
+const T &apImageRep<T,E>::getPixel(unsigned int x, unsigned int y) const {
+    return pixels_[y*width_ + x];
 }
+
+template<typename T, typename E>
+void apImageRep<T,E>::setPixel(unsigned int x, unsigned int y, const T &pixel) {
+    pixles_[y*width_ + x] = pixel;
+}
+
+template<typename T, typename E>
+apImage<T,E> apImageRep<T,E>::thumbnail(unsigned int reduction) const {
+    apImageRep<T,E> *output = new apImageRep(width()/reduction, height()/reduction);
+    for (unsigned int ty=0; ty<output.height(); ty++) {
+        for (unsigned int tx=0; tx<output.width(); tx++) {
+            // Averaging pixels
+            E sum = 0;
+            for (unsigned int y=0; y<reduction; y++) {
+                for (unsigned int x=0; x<reduction; x++) {
+                    sum += getPixel(tx*reduction+x, ty*reduction+y);
+                }
+                output->setPixel(tx, ty, sum/(reduction*reduction));
+            }
+        }
+    }
+    return output;
+}
+
 
 #endif
